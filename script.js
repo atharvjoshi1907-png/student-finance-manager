@@ -1,68 +1,116 @@
-function generatePlan() {
-  const amount = parseInt(document.getElementById("amount").value);
-  const type = document.getElementById("type").value;
-  const goal = document.getElementById("goal").value;
+let splitChart, goldHistoryChart;
 
-  if (!amount || amount <= 0) {
-    alert("Enter a valid monthly amount");
-    return;
-  }
-
-  // Smart saving logic
-  let savePercent;
-
-  if (amount <= 500) savePercent = 0.5;
-  else if (amount <= 1000) savePercent = 0.45;
-  else savePercent = 0.35;
-
-  if (type === "hostel") savePercent -= 0.1;
-
-  let savings = Math.round(amount * savePercent);
-  let spending = amount - savings;
-
-  let weeklyLimit = Math.round(spending / 4);
-  let dailyLimit = Math.round(spending / 24);
-
-  // Gold vs Cash logic
-  let gold, cash;
-  if (savings < 500) {
-    gold = savings;
-    cash = 0;
-  } else {
-    gold = Math.round(savings * 0.6);
-    cash = savings - gold;
-  }
-
-  // Save to localStorage
-  const data = {
-    amount, savings, spending, gold, cash, weeklyLimit, dailyLimit
-  };
-  localStorage.setItem("financePlan", JSON.stringify(data));
-
-  document.getElementById("dashboard").innerHTML = `
-    <h3>📊 Your Smart Finance Plan</h3>
-    <p><b>Total Savings:</b> ₹${savings}</p>
-    <p>🪙 <b>Gold Savings:</b> ₹${gold}</p>
-    <p>💵 <b>Cash Savings:</b> ₹${cash}</p>
-    <p>🍔 <b>Monthly Spending:</b> ₹${spending}</p>
-    <p>📆 <b>Weekly Limit:</b> ₹${weeklyLimit}</p>
-    <p>📅 <b>Daily Limit:</b> ₹${dailyLimit}</p>
-    <p>🎯 <b>Goal:</b> ${goal}</p>
-    <p style="color:green;"><b>Status:</b> Disciplined & Sustainable</p>
-  `;
+// Theme
+function toggleTheme(){
+  document.body.classList.toggle("dark");
+  localStorage.setItem("theme",
+    document.body.classList.contains("dark")?"dark":"light");
+}
+if(localStorage.getItem("theme")==="dark"){
+  document.body.classList.add("dark");
 }
 
-// Load saved plan on refresh
-window.onload = () => {
-  const saved = localStorage.getItem("financePlan");
-  if (saved) {
-    const d = JSON.parse(saved);
-    document.getElementById("dashboard").innerHTML = `
-      <h3>🔁 Last Saved Plan</h3>
-      <p>Total Savings: ₹${d.savings}</p>
-      <p>Gold: ₹${d.gold} | Cash: ₹${d.cash}</p>
-      <p>Weekly Limit: ₹${d.weeklyLimit}</p>
-      <p>Daily Limit: ₹${d.dailyLimit}</p>
-    `;
+// Gold price
+async function fetchGoldPrice(){
+  try{
+    const res = await fetch(
+      "https://api.exchangerate.host/latest?base=XAU&symbols=INR"
+    );
+    const data = await res.json();
+    return data.rates.INR / 31.1035;
+  }catch{
+    return null;
   }
-};
+}
+
+async function generatePlan(){
+  const amount = +amountInput.value;
+  if(!amount) return alert("Enter amount");
+
+  let savePct = amount<=500?0.5:amount<=1000?0.45:0.35;
+  if(typeInput.value==="hostel") savePct-=0.1;
+
+  const savings = Math.round(amount*savePct);
+  const spending = amount - savings;
+  const goldInvest = savings<500?savings:Math.round(savings*0.6);
+
+  const price = await fetchGoldPrice();
+  if(!price) return alert("Gold price unavailable");
+
+  const grams = goldInvest / price;
+  const current = Math.round(grams * price);
+  const diff = current - goldInvest;
+
+  save.textContent = `₹${savings}`;
+  weekly.textContent = `₹${Math.round(spending/4)}`;
+  daily.textContent = `₹${Math.round(spending/24)}`;
+  goldValue.textContent = `₹${current}`;
+  goldPL.innerHTML = diff>=0
+    ? `<span class="profit">+₹${diff}</span>`
+    : `<span class="loss">−₹${Math.abs(diff)}</span>`;
+
+  goldPriceText.textContent =
+    `🪙 Gold Price: ₹${price.toFixed(2)} / gram`;
+
+  saveGoldHistory(diff);
+  renderGoldHistory();
+  renderSplitChart(goldInvest, spending);
+
+  dashboard.style.display="block";
+}
+
+// Charts
+function renderSplitChart(g,s){
+  if(splitChart) splitChart.destroy();
+  splitChart = new Chart(splitChartCanvas,{
+    type:"doughnut",
+    data:{labels:["Gold","Spending"],
+      datasets:[{data:[g,s]}]},
+    options:{responsive:true,maintainAspectRatio:false}
+  });
+}
+
+function saveGoldHistory(p){
+  const h = JSON.parse(localStorage.getItem("goldHistory"))||[];
+  h.push({date:new Date().toLocaleDateString(),profit:p});
+  localStorage.setItem("goldHistory",JSON.stringify(h));
+}
+
+function renderGoldHistory(){
+  const h = JSON.parse(localStorage.getItem("goldHistory"))||[];
+  if(h.length===0) return;
+  if(goldHistoryChart) goldHistoryChart.destroy();
+
+  goldHistoryChart = new Chart(goldHistoryChartCanvas,{
+    type:"line",
+    data:{
+      labels:h.map(x=>x.date),
+      datasets:[{
+        data:h.map(x=>x.profit),
+        borderColor:"#22c55e",
+        tension:0.3
+      }]
+    },
+    options:{responsive:true,maintainAspectRatio:false}
+  });
+}
+
+// DOM
+const amountInput = document.getElementById("amount");
+const typeInput = document.getElementById("type");
+const alertLimit = document.getElementById("alertLimit");
+const dashboard = document.getElementById("dashboard");
+const save = document.getElementById("save");
+const weekly = document.getElementById("weekly");
+const daily = document.getElementById("daily");
+const goldValue = document.getElementById("goldValue");
+const goldPL = document.getElementById("goldPL");
+const goldPriceText = document.getElementById("goldPriceText");
+const splitChartCanvas = document.getElementById("splitChart");
+const goldHistoryChartCanvas =
+  document.getElementById("goldHistoryChart");
+
+// PWA
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("sw.js");
+}

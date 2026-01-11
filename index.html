@@ -1,275 +1,85 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PocketPilot</title>
 
-  <!-- PWA Meta -->
-  <meta name="theme-color" content="#2563eb" />
-  <link rel="manifest" href="manifest.json" />
-  <link rel="apple-touch-icon" href="icon-192.png" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <!-- PWA -->
+  <meta name="theme-color" content="#2563eb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
 
-  <!-- Chart.js -->
+  <!-- Fonts + Charts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <!-- Google Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-
-  <style>
-    :root {
-      --bg: #eef2f7;
-      --card: #ffffff;
-      --text: #111827;
-      --muted: #555;
-      --primary: #2563eb;
-    }
-
-    body.dark {
-      --bg: #0f172a;
-      --card: #1e293b;
-      --text: #f8fafc;
-      --muted: #cbd5f5;
-      --primary: #38bdf8;
-    }
-
-    body {
-      font-family: 'Inter', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      margin: 0;
-      transition: background 0.3s, color 0.3s;
-    }
-
-    .app {
-      max-width: 1000px;
-      margin: 20px auto;
-      padding: 16px;
-    }
-
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-
-    header h1 {
-      margin: 0;
-      font-size: 1.8rem;
-    }
-
-    header p {
-      margin: 0;
-      font-size: 0.9rem;
-      color: var(--muted);
-    }
-
-    .toggle {
-      cursor: pointer;
-      padding: 8px 12px;
-      border-radius: 10px;
-      background: var(--card);
-      font-size: 14px;
-    }
-
-    .card {
-      background: var(--card);
-      padding: 22px;
-      border-radius: 16px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-      margin-bottom: 25px;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 16px;
-    }
-
-    .stat {
-      background: #f9fafb;
-      border-radius: 12px;
-      padding: 14px;
-      text-align: center;
-    }
-
-    button {
-      background: var(--primary);
-      color: white;
-      border: none;
-      padding: 14px;
-      border-radius: 12px;
-      font-size: 16px;
-      cursor: pointer;
-      width: 100%;
-      margin-top: 18px;
-    }
-
-    footer {
-      text-align: center;
-      font-size: 13px;
-      color: var(--muted);
-      margin-bottom: 20px;
-    }
-
-    @media (max-width: 600px) {
-      header {
-        flex-direction: column;
-        gap: 8px;
-        text-align: center;
-      }
-    }
-  </style>
+  <!-- CSS -->
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-
 <div class="app">
-  <header>
+
+<header>
+  <div>
+    <h1>🚀 PocketPilot</h1>
+    <p class="subtitle">Smart money planning for students</p>
+  </div>
+  <button class="toggle" onclick="toggleTheme()">🌙 Dark</button>
+</header>
+
+<div class="card">
+  <h2>Enter Your Details</h2>
+  <div class="grid">
     <div>
-      <h1>🚀 PocketPilot</h1>
-      <p>Smart money planning for students</p>
+      <label>Monthly Amount (₹)</label>
+      <input id="amount" type="number">
     </div>
-    <div class="toggle" onclick="toggleTheme()">🌙 Dark</div>
-  </header>
-
-  <!-- INPUT CARD -->
-  <div class="card">
-    <h2>Enter Your Details</h2>
-    <div class="grid">
-      <div>
-        <label>Monthly Amount (₹)</label>
-        <input type="number" id="amount" placeholder="500 / 1000" />
-      </div>
-      <div>
-        <label>Student Type</label>
-        <select id="type">
-          <option value="day">Day Scholar</option>
-          <option value="hostel">Hosteller</option>
-        </select>
-      </div>
-      <div>
-        <label>Primary Goal</label>
-        <select id="goal">
-          <option value="fees">College Fees</option>
-          <option value="emergency">Emergency Fund</option>
-          <option value="general">General Savings</option>
-        </select>
-      </div>
+    <div>
+      <label>Student Type</label>
+      <select id="type">
+        <option value="day">Day Scholar</option>
+        <option value="hostel">Hosteller</option>
+      </select>
     </div>
-    <button onclick="generatePlan()">Generate Financial Plan</button>
+    <div>
+      <label>Gold Alert Threshold (₹)</label>
+      <input id="alertLimit" type="number">
+    </div>
   </div>
-
-  <!-- DASHBOARD -->
-  <div class="card" id="dashboard" style="display:none;">
-    <h2>📊 Financial Dashboard</h2>
-    <div class="grid">
-      <div class="stat"><h3 id="save"></h3><p>Total Savings</p></div>
-      <div class="stat"><h3 id="gold"></h3><p>Gold Allocation</p></div>
-      <div class="stat"><h3 id="cash"></h3><p>Cash Allocation</p></div>
-      <div class="stat"><h3 id="weekly"></h3><p>Weekly Limit</p></div>
-      <div class="stat"><h3 id="daily"></h3><p>Daily Limit</p></div>
-    </div>
-
-    <canvas id="splitChart"></canvas>
-    <canvas id="spendChart"></canvas>
-
-    <h3 style="margin-top:30px;">📈 Savings History</h3>
-    <canvas id="historyChart"></canvas>
-    <div id="historyTable"></div>
-  </div>
-
-  <footer>
-    Built with ❤️ using HTML, CSS & JavaScript
-  </footer>
+  <button onclick="generatePlan()">Generate Financial Plan</button>
 </div>
 
-<script>
-let splitChart, spendChart, historyChart;
+<div class="card" id="dashboard" style="display:none">
+  <h2>📊 Financial Dashboard</h2>
 
-function toggleTheme() {
-  document.body.classList.toggle("dark");
-  localStorage.setItem("theme",
-    document.body.classList.contains("dark") ? "dark" : "light"
-  );
-}
+  <div class="grid stats-grid">
+    <div class="stat"><h3 id="save"></h3><p>Savings</p></div>
+    <div class="stat"><h3 id="goldValue"></h3><p>Gold Value</p></div>
+    <div class="stat"><h3 id="goldPL"></h3><p>Gold P/L</p></div>
+    <div class="stat"><h3 id="weekly"></h3><p>Weekly Limit</p></div>
+    <div class="stat"><h3 id="daily"></h3><p>Daily Limit</p></div>
+  </div>
 
-if (localStorage.getItem("theme") === "dark") {
-  document.body.classList.add("dark");
-}
+  <p id="goldPriceText" class="muted"></p>
 
-function generatePlan() {
-  const amount = Number(document.getElementById('amount').value);
-  const type = document.getElementById('type').value;
+  <div class="chart-container">
+    <canvas id="splitChart"></canvas>
+  </div>
 
-  if (!amount || amount <= 0) {
-    alert('Please enter a valid amount');
-    return;
-  }
+  <h3>📈 Gold Profit / Loss History</h3>
+  <div class="chart-container">
+    <canvas id="goldHistoryChart"></canvas>
+  </div>
+</div>
 
-  let savePercent = amount <= 500 ? 0.5 : amount <= 1000 ? 0.45 : 0.35;
-  if (type === 'hostel') savePercent -= 0.1;
+<footer>Live Gold • PWA • Android & iOS</footer>
+</div>
 
-  const savings = Math.round(amount * savePercent);
-  const spending = amount - savings;
-
-  const gold = savings < 500 ? savings : Math.round(savings * 0.6);
-  const cash = savings - gold;
-
-  document.getElementById('save').innerText = `₹${savings}`;
-  document.getElementById('gold').innerText = `₹${gold}`;
-  document.getElementById('cash').innerText = `₹${cash}`;
-  document.getElementById('weekly').innerText = `₹${Math.round(spending/4)}`;
-  document.getElementById('daily').innerText = `₹${Math.round(spending/24)}`;
-
-  document.getElementById('dashboard').style.display = 'block';
-
-  saveHistory(amount, savings);
-  renderCharts(gold, cash, spending);
-  renderHistory();
-}
-
-function saveHistory(amount, savings) {
-  const history = JSON.parse(localStorage.getItem('savingsHistory')) || [];
-  history.push({ date: new Date().toLocaleDateString(), amount, savings });
-  localStorage.setItem('savingsHistory', JSON.stringify(history));
-}
-
-function renderHistory() {
-  const history = JSON.parse(localStorage.getItem('savingsHistory')) || [];
-  const labels = history.map(h => h.date);
-  const data = history.map(h => h.savings);
-
-  if (historyChart) historyChart.destroy();
-
-  historyChart = new Chart(document.getElementById('historyChart'), {
-    type: 'line',
-    data: { labels, datasets: [{ label: 'Savings Over Time', data, tension: 0.3 }] }
-  });
-}
-
-function renderCharts(gold, cash, spending) {
-  if (splitChart) splitChart.destroy();
-  if (spendChart) spendChart.destroy();
-
-  splitChart = new Chart(document.getElementById('splitChart'), {
-    type: 'doughnut',
-    data: { labels: ['Gold', 'Cash'], datasets: [{ data: [gold, cash] }] }
-  });
-
-  spendChart = new Chart(document.getElementById('spendChart'), {
-    type: 'bar',
-    data: { labels: ['Weekly', 'Daily'], datasets: [{ data: [spending/4, spending/24] }] }
-  });
-}
-
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("sw.js");
-}
-</script>
-
+<!-- JS -->
+<script src="script.js"></script>
 </body>
 </html>
