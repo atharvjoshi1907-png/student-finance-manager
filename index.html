@@ -3,107 +3,137 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Student Finance Manager</title>
+  <title>PocketPilot</title>
 
-  <!-- Chart.js CDN -->
+  <!-- PWA Meta -->
+  <meta name="theme-color" content="#2563eb" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <!-- Google Font -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
   <style>
+    :root {
+      --bg: #eef2f7;
+      --card: #ffffff;
+      --text: #111827;
+      --muted: #555;
+      --primary: #2563eb;
+    }
+
+    body.dark {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --text: #f8fafc;
+      --muted: #cbd5f5;
+      --primary: #38bdf8;
+    }
+
     body {
       font-family: 'Inter', sans-serif;
-      background: #eef2f7;
+      background: var(--bg);
+      color: var(--text);
       margin: 0;
-      padding: 0;
+      transition: background 0.3s, color 0.3s;
     }
+
     .app {
       max-width: 1000px;
-      margin: 30px auto;
-      padding: 20px;
+      margin: 20px auto;
+      padding: 16px;
     }
+
     header {
-      text-align: center;
-      margin-bottom: 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
     }
+
     header h1 {
-      font-size: 2.2rem;
-      margin-bottom: 6px;
+      margin: 0;
+      font-size: 1.8rem;
     }
+
     header p {
-      color: #555;
+      margin: 0;
+      font-size: 0.9rem;
+      color: var(--muted);
     }
+
+    .toggle {
+      cursor: pointer;
+      padding: 8px 12px;
+      border-radius: 10px;
+      background: var(--card);
+      font-size: 14px;
+    }
+
     .card {
-      background: #fff;
+      background: var(--card);
       padding: 22px;
       border-radius: 16px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.1);
       margin-bottom: 25px;
     }
+
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
     }
-    label {
-      font-weight: 600;
-      display: block;
-      margin-bottom: 6px;
+
+    .stat {
+      background: #f9fafb;
+      border-radius: 12px;
+      padding: 14px;
+      text-align: center;
     }
-    input, select {
-      width: 100%;
-      padding: 12px;
-      border-radius: 10px;
-      border: 1px solid #ccc;
-      font-size: 15px;
-    }
+
     button {
-      background: #2563eb;
+      background: var(--primary);
       color: white;
       border: none;
-      padding: 14px 20px;
+      padding: 14px;
       border-radius: 12px;
       font-size: 16px;
       cursor: pointer;
       width: 100%;
       margin-top: 18px;
     }
-    button:hover {
-      background: #1e4fd8;
-    }
-    .stat {
-      padding: 18px;
-      background: #f9fafb;
-      border-radius: 14px;
-      text-align: center;
-    }
-    .stat h3 {
-      margin: 0;
-      font-size: 1.5rem;
-    }
-    .stat p {
-      margin-top: 6px;
-      color: #555;
-    }
-    canvas {
-      max-width: 100%;
-      margin-top: 20px;
-    }
+
     footer {
       text-align: center;
-      font-size: 14px;
-      color: #777;
-      margin-top: 40px;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 600px) {
+      header {
+        flex-direction: column;
+        gap: 8px;
+        text-align: center;
+      }
     }
   </style>
 </head>
+
 <body>
 
 <div class="app">
   <header>
-    <h1>🎓 Student Finance Manager</h1>
-    <p>Complete finance planning dashboard for college students</p>
+    <div>
+      <h1>🚀 PocketPilot</h1>
+      <p>Smart money planning for students</p>
+    </div>
+    <div class="toggle" onclick="toggleTheme()">🌙 Dark</div>
   </header>
 
   <!-- INPUT CARD -->
@@ -140,11 +170,10 @@
       <div class="stat"><h3 id="save"></h3><p>Total Savings</p></div>
       <div class="stat"><h3 id="gold"></h3><p>Gold Allocation</p></div>
       <div class="stat"><h3 id="cash"></h3><p>Cash Allocation</p></div>
-      <div class="stat"><h3 id="weekly"></h3><p>Weekly Spend Limit</p></div>
-      <div class="stat"><h3 id="daily"></h3><p>Daily Spend Limit</p></div>
+      <div class="stat"><h3 id="weekly"></h3><p>Weekly Limit</p></div>
+      <div class="stat"><h3 id="daily"></h3><p>Daily Limit</p></div>
     </div>
 
-    <!-- CHARTS -->
     <canvas id="splitChart"></canvas>
     <canvas id="spendChart"></canvas>
 
@@ -154,12 +183,23 @@
   </div>
 
   <footer>
-    Built with HTML, CSS & JavaScript • Ready to Deploy
+    Built with ❤️ using HTML, CSS & JavaScript
   </footer>
 </div>
 
 <script>
-let splitChart, spendChart;
+let splitChart, spendChart, historyChart;
+
+function toggleTheme() {
+  document.body.classList.toggle("dark");
+  localStorage.setItem("theme",
+    document.body.classList.contains("dark") ? "dark" : "light"
+  );
+}
+
+if (localStorage.getItem("theme") === "dark") {
+  document.body.classList.add("dark");
+}
 
 function generatePlan() {
   const amount = Number(document.getElementById('amount').value);
@@ -192,15 +232,9 @@ function generatePlan() {
   renderHistory();
 }
 
-let historyChart;
-
 function saveHistory(amount, savings) {
   const history = JSON.parse(localStorage.getItem('savingsHistory')) || [];
-  history.push({
-    date: new Date().toLocaleDateString(),
-    amount,
-    savings
-  });
+  history.push({ date: new Date().toLocaleDateString(), amount, savings });
   localStorage.setItem('savingsHistory', JSON.stringify(history));
 }
 
@@ -211,51 +245,29 @@ function renderHistory() {
 
   if (historyChart) historyChart.destroy();
 
-  const ctx = document.getElementById('historyChart').getContext('2d');
-  historyChart = new Chart(ctx, {
+  historyChart = new Chart(document.getElementById('historyChart'), {
     type: 'line',
-    data: {
-      labels,
-      datasets: [{
-        label: 'Savings Over Time',
-        data,
-        fill: false,
-        tension: 0.3
-      }]
-    }
+    data: { labels, datasets: [{ label: 'Savings Over Time', data, tension: 0.3 }] }
   });
-
-  let tableHTML = '<table style="width:100%; margin-top:15px; border-collapse:collapse;">';
-  tableHTML += '<tr><th>Date</th><th>Monthly Amount</th><th>Savings</th></tr>';
-  history.forEach(h => {
-    tableHTML += `<tr><td>${h.date}</td><td>₹${h.amount}</td><td>₹${h.savings}</td></tr>`;
-  });
-  tableHTML += '</table>';
-
-  document.getElementById('historyTable').innerHTML = tableHTML;
 }
 
 function renderCharts(gold, cash, spending) {
   if (splitChart) splitChart.destroy();
   if (spendChart) spendChart.destroy();
 
-  const ctx1 = document.getElementById('splitChart').getContext('2d');
-  splitChart = new Chart(ctx1, {
+  splitChart = new Chart(document.getElementById('splitChart'), {
     type: 'doughnut',
-    data: {
-      labels: ['Gold Savings', 'Cash Savings'],
-      datasets: [{ data: [gold, cash] }]
-    }
+    data: { labels: ['Gold', 'Cash'], datasets: [{ data: [gold, cash] }] }
   });
 
-  const ctx2 = document.getElementById('spendChart').getContext('2d');
-  spendChart = new Chart(ctx2, {
+  spendChart = new Chart(document.getElementById('spendChart'), {
     type: 'bar',
-    data: {
-      labels: ['Weekly Limit', 'Daily Limit'],
-      datasets: [{ data: [spending/4, spending/24] }]
-    }
+    data: { labels: ['Weekly', 'Daily'], datasets: [{ data: [spending/4, spending/24] }] }
   });
+}
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js");
 }
 </script>
 
