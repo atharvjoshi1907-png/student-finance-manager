@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Finance Manager</title>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #eef2f7;
+      margin: 0;
+      padding: 0;
+    }
+    .app {
+      max-width: 1000px;
+      margin: 30px auto;
+      padding: 20px;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    header h1 {
+      font-size: 2.2rem;
+      margin-bottom: 6px;
+    }
+    header p {
+      color: #555;
+    }
+    .card {
+      background: #fff;
+      padding: 22px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      margin-bottom: 25px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+    }
+    label {
+      font-weight: 600;
+      display: block;
+      margin-bottom: 6px;
+    }
+    input, select {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      font-size: 15px;
+    }
+    button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 14px 20px;
+      border-radius: 12px;
+      font-size: 16px;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 18px;
+    }
+    button:hover {
+      background: #1e4fd8;
+    }
+    .stat {
+      padding: 18px;
+      background: #f9fafb;
+      border-radius: 14px;
+      text-align: center;
+    }
+    .stat h3 {
+      margin: 0;
+      font-size: 1.5rem;
+    }
+    .stat p {
+      margin-top: 6px;
+      color: #555;
+    }
+    canvas {
+      max-width: 100%;
+      margin-top: 20px;
+    }
+    footer {
+      text-align: center;
+      font-size: 14px;
+      color: #777;
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <header>
+    <h1>🎓 Student Finance Manager</h1>
+    <p>Complete finance planning dashboard for college students</p>
+  </header>
+
+  <!-- INPUT CARD -->
+  <div class="card">
+    <h2>Enter Your Details</h2>
+    <div class="grid">
+      <div>
+        <label>Monthly Amount (₹)</label>
+        <input type="number" id="amount" placeholder="500 / 1000" />
+      </div>
+      <div>
+        <label>Student Type</label>
+        <select id="type">
+          <option value="day">Day Scholar</option>
+          <option value="hostel">Hosteller</option>
+        </select>
+      </div>
+      <div>
+        <label>Primary Goal</label>
+        <select id="goal">
+          <option value="fees">College Fees</option>
+          <option value="emergency">Emergency Fund</option>
+          <option value="general">General Savings</option>
+        </select>
+      </div>
+    </div>
+    <button onclick="generatePlan()">Generate Financial Plan</button>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="card" id="dashboard" style="display:none;">
+    <h2>📊 Financial Dashboard</h2>
+    <div class="grid">
+      <div class="stat"><h3 id="save"></h3><p>Total Savings</p></div>
+      <div class="stat"><h3 id="gold"></h3><p>Gold Allocation</p></div>
+      <div class="stat"><h3 id="cash"></h3><p>Cash Allocation</p></div>
+      <div class="stat"><h3 id="weekly"></h3><p>Weekly Spend Limit</p></div>
+      <div class="stat"><h3 id="daily"></h3><p>Daily Spend Limit</p></div>
+    </div>
+
+    <!-- CHARTS -->
+    <canvas id="splitChart"></canvas>
+    <canvas id="spendChart"></canvas>
+
+    <h3 style="margin-top:30px;">📈 Savings History</h3>
+    <canvas id="historyChart"></canvas>
+    <div id="historyTable"></div>
+  </div>
+
+  <footer>
+    Built with HTML, CSS & JavaScript • Ready to Deploy
+  </footer>
+</div>
+
+<script>
+let splitChart, spendChart;
+
+function generatePlan() {
+  const amount = Number(document.getElementById('amount').value);
+  const type = document.getElementById('type').value;
+
+  if (!amount || amount <= 0) {
+    alert('Please enter a valid amount');
+    return;
+  }
+
+  let savePercent = amount <= 500 ? 0.5 : amount <= 1000 ? 0.45 : 0.35;
+  if (type === 'hostel') savePercent -= 0.1;
+
+  const savings = Math.round(amount * savePercent);
+  const spending = amount - savings;
+
+  const gold = savings < 500 ? savings : Math.round(savings * 0.6);
+  const cash = savings - gold;
+
+  document.getElementById('save').innerText = `₹${savings}`;
+  document.getElementById('gold').innerText = `₹${gold}`;
+  document.getElementById('cash').innerText = `₹${cash}`;
+  document.getElementById('weekly').innerText = `₹${Math.round(spending/4)}`;
+  document.getElementById('daily').innerText = `₹${Math.round(spending/24)}`;
+
+  document.getElementById('dashboard').style.display = 'block';
+
+  saveHistory(amount, savings);
+  renderCharts(gold, cash, spending);
+  renderHistory();
+}
+
+let historyChart;
+
+function saveHistory(amount, savings) {
+  const history = JSON.parse(localStorage.getItem('savingsHistory')) || [];
+  history.push({
+    date: new Date().toLocaleDateString(),
+    amount,
+    savings
+  });
+  localStorage.setItem('savingsHistory', JSON.stringify(history));
+}
+
+function renderHistory() {
+  const history = JSON.parse(localStorage.getItem('savingsHistory')) || [];
+  const labels = history.map(h => h.date);
+  const data = history.map(h => h.savings);
+
+  if (historyChart) historyChart.destroy();
+
+  const ctx = document.getElementById('historyChart').getContext('2d');
+  historyChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Savings Over Time',
+        data,
+        fill: false,
+        tension: 0.3
+      }]
+    }
+  });
+
+  let tableHTML = '<table style="width:100%; margin-top:15px; border-collapse:collapse;">';
+  tableHTML += '<tr><th>Date</th><th>Monthly Amount</th><th>Savings</th></tr>';
+  history.forEach(h => {
+    tableHTML += `<tr><td>${h.date}</td><td>₹${h.amount}</td><td>₹${h.savings}</td></tr>`;
+  });
+  tableHTML += '</table>';
+
+  document.getElementById('historyTable').innerHTML = tableHTML;
+}
+
+function renderCharts(gold, cash, spending) {
+  if (splitChart) splitChart.destroy();
+  if (spendChart) spendChart.destroy();
+
+  const ctx1 = document.getElementById('splitChart').getContext('2d');
+  splitChart = new Chart(ctx1, {
+    type: 'doughnut',
+    data: {
+      labels: ['Gold Savings', 'Cash Savings'],
+      datasets: [{ data: [gold, cash] }]
+    }
+  });
+
+  const ctx2 = document.getElementById('spendChart').getContext('2d');
+  spendChart = new Chart(ctx2, {
+    type: 'bar',
+    data: {
+      labels: ['Weekly Limit', 'Daily Limit'],
+      datasets: [{ data: [spending/4, spending/24] }]
+    }
+  });
+}
+</script>
+
+</body>
+</html>
