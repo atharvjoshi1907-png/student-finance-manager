@@ -1,6 +1,6 @@
 let splitChart, goldHistoryChart;
 
-/* 🌙 Theme */
+// 🌙 Theme
 function toggleTheme(){
   document.body.classList.toggle("dark");
   localStorage.setItem("theme",
@@ -10,112 +10,83 @@ if(localStorage.getItem("theme")==="dark"){
   document.body.classList.add("dark");
 }
 
-/* 🪙 Reliable gold price with fallback */
-async function fetchGoldPrice(){
-  try{
-    const res = await fetch(
-      "https://api.allorigins.win/raw?url=https://www.goldapi.io/api/XAU/INR",
-      { headers: { "x-access-token": "goldapi-demo-key" } }
-    );
-    const data = await res.json();
-    const pricePerGram = data.price / 31.1035;
-    localStorage.setItem("lastGoldPrice", pricePerGram);
-    return pricePerGram;
-  }catch{
-    const cached = localStorage.getItem("lastGoldPrice");
-    return cached ? Number(cached) : null;
-  }
-}
-
-async function generatePlan(){
+function generatePlan(){
   const amount = +amountInput.value;
   if(!amount) return alert("Enter amount");
 
-  let savePct = amount<=500?0.5:amount<=1000?0.45:0.35;
-  if(typeInput.value==="hostel") savePct-=0.1;
+  let savePct = amount <= 500 ? 0.5 : amount <= 1000 ? 0.45 : 0.35;
+  if(typeInput.value === "hostel") savePct -= 0.1;
 
-  const savings = Math.round(amount*savePct);
+  const savings = Math.round(amount * savePct);
   const spending = amount - savings;
-  const goldInvest = savings<500?savings:Math.round(savings*0.6);
 
-  const price = await fetchGoldPrice();
-  if(!price){
-    alert("⚠️ Gold price unavailable. Try again later.");
-    return;
-  }
-
-  const grams = goldInvest / price;
-  const current = Math.round(grams * price);
-  const diff = current - goldInvest;
+  const gold = savings < 500 ? savings : Math.round(savings * 0.6);
+  const cash = savings - gold;
 
   save.textContent = `₹${savings}`;
-  weekly.textContent = `₹${Math.round(spending/4)}`;
-  daily.textContent = `₹${Math.round(spending/24)}`;
-  goldValue.textContent = `₹${current}`;
-  goldPL.innerHTML = diff>=0
-    ? `<span style="color:#22c55e">+₹${diff}</span>`
-    : `<span style="color:#ef4444">−₹${Math.abs(diff)}</span>`;
+  goldSave.textContent = `₹${gold}`;
+  cashSave.textContent = `₹${cash}`;
+  weekly.textContent = `₹${Math.round(spending / 4)}`;
+  daily.textContent = `₹${Math.round(spending / 24)}`;
 
-  goldPriceText.textContent =
-    `🪙 Gold Price: ₹${price.toFixed(2)} / gram`;
-
-  saveGoldHistory(diff);
+  saveGoldHistory(gold);
   renderGoldHistory();
-  renderSplitChart(goldInvest, spending);
+  renderSplitChart(gold, cash);
 
-  dashboard.style.display="block";
+  dashboard.style.display = "block";
 }
 
-/* 📊 Charts */
-function renderSplitChart(g,s){
+// 📊 Charts
+function renderSplitChart(gold, cash){
   if(splitChart) splitChart.destroy();
   splitChart = new Chart(splitChartCanvas,{
     type:"doughnut",
-    data:{labels:["Gold","Spending"],datasets:[{data:[g,s]}]},
-    options:{responsive:true,maintainAspectRatio:false}
+    data:{ labels:["Gold Savings","Cash Savings"],
+      datasets:[{ data:[gold, cash] }] },
+    options:{ responsive:true, maintainAspectRatio:false }
   });
 }
 
-function saveGoldHistory(p){
-  const h = JSON.parse(localStorage.getItem("goldHistory"))||[];
-  h.push({date:new Date().toLocaleDateString(),profit:p});
-  localStorage.setItem("goldHistory",JSON.stringify(h));
+// 📈 History
+function saveGoldHistory(gold){
+  const h = JSON.parse(localStorage.getItem("goldHistory")) || [];
+  h.push({ date:new Date().toLocaleDateString(), amount:gold });
+  localStorage.setItem("goldHistory", JSON.stringify(h));
 }
 
 function renderGoldHistory(){
-  const h = JSON.parse(localStorage.getItem("goldHistory"))||[];
-  if(h.length===0) return;
-  if(goldHistoryChart) goldHistoryChart.destroy();
+  const h = JSON.parse(localStorage.getItem("goldHistory")) || [];
+  if(h.length === 0) return;
 
+  if(goldHistoryChart) goldHistoryChart.destroy();
   goldHistoryChart = new Chart(goldHistoryChartCanvas,{
     type:"line",
     data:{
       labels:h.map(x=>x.date),
       datasets:[{
-        data:h.map(x=>x.profit),
-        borderColor:"#22c55e",
+        label:"Gold Saved (₹)",
+        data:h.map(x=>x.amount),
+        borderColor:"#facc15",
         tension:0.3
       }]
     },
-    options:{responsive:true,maintainAspectRatio:false}
+    options:{ responsive:true, maintainAspectRatio:false }
   });
 }
 
-/* DOM */
-const amountInput=document.getElementById("amount");
-const typeInput=document.getElementById("type");
-const alertLimit=document.getElementById("alertLimit");
-const dashboard=document.getElementById("dashboard");
-const save=document.getElementById("save");
-const weekly=document.getElementById("weekly");
-const daily=document.getElementById("daily");
-const goldValue=document.getElementById("goldValue");
-const goldPL=document.getElementById("goldPL");
-const goldPriceText=document.getElementById("goldPriceText");
-const splitChartCanvas=document.getElementById("splitChart");
-const goldHistoryChartCanvas=document.getElementById("goldHistoryChart");
+// DOM
+const amountInput = document.getElementById("amount");
+const typeInput = document.getElementById("type");
+const dashboard = document.getElementById("dashboard");
+const save = document.getElementById("save");
+const goldSave = document.getElementById("goldSave");
+const cashSave = document.getElementById("cashSave");
+const weekly = document.getElementById("weekly");
+const daily = document.getElementById("daily");
+const splitChartCanvas = document.getElementById("splitChart");
+const goldHistoryChartCanvas = document.getElementById("goldHistoryChart");
 
-/* PWA */
+// PWA
 if("serviceWorker" in navigator){
   navigator.serviceWorker.register("sw.js");
 }

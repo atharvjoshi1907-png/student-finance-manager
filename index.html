@@ -16,7 +16,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <!-- Styles -->
   <link rel="stylesheet" href="style.css">
 </head>
 
@@ -26,7 +25,7 @@
 <header>
   <div>
     <h1>🚀 PocketPilot</h1>
-    <p class="subtitle">Smart money planning for students</p>
+    <p class="subtitle">Smart savings planner for students</p>
   </div>
   <button class="toggle" onclick="toggleTheme()">🌙 Dark</button>
 </header>
@@ -45,38 +44,32 @@
         <option value="hostel">Hosteller</option>
       </select>
     </div>
-    <div>
-      <label>Gold Alert Threshold (₹)</label>
-      <input id="alertLimit" type="number">
-    </div>
   </div>
-  <button onclick="generatePlan()">Generate Financial Plan</button>
+  <button onclick="generatePlan()">Generate Saving Plan</button>
 </div>
 
 <div class="card" id="dashboard" style="display:none">
-  <h2>📊 Financial Dashboard</h2>
+  <h2>📊 Savings Dashboard</h2>
 
   <div class="grid stats-grid">
-    <div class="stat"><h3 id="save"></h3><p>Savings</p></div>
-    <div class="stat"><h3 id="goldValue"></h3><p>Gold Value</p></div>
-    <div class="stat"><h3 id="goldPL"></h3><p>Gold P/L</p></div>
-    <div class="stat"><h3 id="weekly"></h3><p>Weekly Limit</p></div>
-    <div class="stat"><h3 id="daily"></h3><p>Daily Limit</p></div>
+    <div class="stat"><h3 id="save"></h3><p>Total Savings</p></div>
+    <div class="stat"><h3 id="goldSave"></h3><p>Gold Savings</p></div>
+    <div class="stat"><h3 id="cashSave"></h3><p>Cash Savings</p></div>
+    <div class="stat"><h3 id="weekly"></h3><p>Weekly Spend</p></div>
+    <div class="stat"><h3 id="daily"></h3><p>Daily Spend</p></div>
   </div>
-
-  <p id="goldPriceText" class="muted"></p>
 
   <div class="chart-container">
     <canvas id="splitChart"></canvas>
   </div>
 
-  <h3>📈 Gold Profit / Loss History</h3>
+  <h3>📈 Gold Savings History</h3>
   <div class="chart-container">
     <canvas id="goldHistoryChart"></canvas>
   </div>
 </div>
 
-<footer>Live Gold • PWA • Android & iOS</footer>
+<footer>Gold Savings • PWA • Android & iOS</footer>
 </div>
 
 <script src="script.js"></script>
